@@ -94,7 +94,7 @@ proxy-groups:
       - 全球直连
       - 台湾节点
       - 香港节点
-  - name: TikTok
+  - name: 抖音
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png
     type: select
     proxies:
@@ -578,7 +578,7 @@ rules:
   - "RULE-SET,Bahamut,巴哈姆特"
   - "RULE-SET,BilibiliHMT,哔哩哔哩"
   - "RULE-SET,Bilibili,哔哩哔哩"
-  - "RULE-SET,TikTok,TikTok"
+  - "RULE-SET,TikTok,抖音"
   - "RULE-SET,ChinaMedia,国内媒体"
   - "RULE-SET,ProxyMedia,国外媒体"
   - "RULE-SET,ProxyGFWlist,节点选择"
