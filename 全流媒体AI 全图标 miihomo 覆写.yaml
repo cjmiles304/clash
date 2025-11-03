@@ -1,21 +1,18 @@
 port: 7890
 socks-port: 7891
 allow-lan: true
+ipv6: true         # ✅ 保留：让节点连接能用 IPv6
 mode: Rule
 log-level: info
 external-controller: :9090
+
 dns:
   enable: true
   listen: 0.0.0.0:1053
-  ipv6: false
+  ipv6: false       # 🚫 禁止解析 IPv6
   enhanced-mode: fake-ip
-
-  # 不指定国内 DNS，让系统默认去解析国内域名
   nameserver:
     - system
-    - 223.5.5.5
-    - 119.29.29.29
-
   # 国外 DNS（防污染，用加密 DNS）
   fallback:
     - https://1.1.1.1/dns-query
@@ -109,7 +106,13 @@ rule-providers:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Privacy/Privacy_Classical.yaml
     path: ./ruleset/privacy.yaml
     interval: 86400
-
+  
+  dazn:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/DAZN/DAZN.yaml
+    path: ./ruleset/dazn.yaml
+    interval: 86400
   primevideo:
     type: http
     behavior: classical
@@ -140,7 +143,6 @@ rule-providers:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HuluUSA/HuluUSA.yaml
     path: ./ruleset/huluusa.yaml
     interval: 86400
-
   hbo_hk:
     type: http
     behavior: classical
@@ -252,8 +254,20 @@ rule-providers:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
     path: ./ruleset/tiktok.yaml
     interval: 86400
+  adobe:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Adobe/Adobe.yaml
+    path: ./ruleset/adobe.yaml
+    interval: 86400
 
-  # === 新增：AI 规则源 ===
+  adobe_activation:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdobeActivation/AdobeActivation.yaml
+    path: ./ruleset/adobe_activation.yaml
+    interval: 86400
+
   openai:
     type: http
     behavior: classical
@@ -472,11 +486,14 @@ proxy-groups:
       - 故障转移
       - 负载均衡
 
+  - { name: Adobe,          type: select, icon: https://www.adobe.com/cc-shared/assets/img/product-icons/svg/photoshop-40.svg, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 英国节点, 德国节点, 手动选择1, 手动选择2] }
+
   - { name: Telegram,       type: select, icon: https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png, proxies: [国外流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
   - { name: Bilibili,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png, proxies: [国内流量, 香港节点, 台湾节点] }
   - { name: YouTube,        type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2, 故障转移, 负载均衡] }
   - { name: ParamountPlus,  type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Paramount.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
   - { name: Hulu,           type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hulu_1.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
+  - { name: DAZN, type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DAZN.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 英国节点, 德国节点, 手动选择1, 手动选择2] }
   - { name: PrimeVideo,     type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Prime_Video.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
   - { name: HBO,            type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/HBO_Max.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
   - { name: 社交平台IP归属地, type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Instagram.png, proxies: [DIRECT, 国内流量, 国外流量, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
@@ -568,6 +585,7 @@ rules:
   - RULE-SET,privacy,隐私防护
 
   # 流媒体 / 平台
+  - RULE-SET,dazn,DAZN
   - RULE-SET,primevideo,PrimeVideo
   - RULE-SET,paramountplus,ParamountPlus
   - RULE-SET,hulu,Hulu
@@ -598,6 +616,10 @@ rules:
   - RULE-SET,gemini,AI服务
   - RULE-SET,copilot,AI服务
 
+  # === 新增：adobe ===
+  - RULE-SET,adobe,Adobe
+  - RULE-SET,adobe_activation,Adobe
+
   # 国外/国内媒体
   - RULE-SET,global_media,国外媒体
   - RULE-SET,cn_media,国内媒体
@@ -626,3 +648,4 @@ rules:
   # 兜底
   - MATCH,漏网之鱼
 
+ 
