@@ -8,71 +8,101 @@ external-controller: :9090
 
 dns:
   enable: true
-  listen: 0.0.0.0:1053
-  ipv6: false       # 🚫 禁止解析 IPv6
+  listen: 0.0.0.0:53
+  ipv6: false
   enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+
+  # 不建议只写 system（会被污染/劫持）
   nameserver:
     - system
-  # 国外 DNS（防污染，用加密 DNS）
+  #  - https://1.1.1.1/dns-query
+  #  - https://dns.google/dns-query
+
   fallback:
     - https://1.1.1.1/dns-query
     - https://1.0.0.1/dns-query
     - https://dns.google/dns-query
     - tls://1.1.1.1:853
     - tls://dns.google:853
-# —— fake-ip 过滤，避免国内银行/支付/系统更新误走代理 ——
-fake-ip-filter:
-  # 常见支付/银行
-  - '*.alipay.com'
-  - '*.alipayobjects.com'
-  - '*.taobao.com'
-  - '*.tmall.com'
-  - '*.jd.com'
-  - '*.bankcomm.com'
-  - '*.cmbchina.com'
-  - '*.cmbc.com.cn'
-  - '*.icbc.com.cn'
-  - '*.ccb.com'
-  - '*.abchina.com'
-  - '*.boc.cn'
-  - '*.pingan.com'
-  - '*.cib.com.cn'
-  - '*.psbc.com'
-  - '*.unionpay.com'
-  - '*.unionpayintl.com'
 
-  # 微信 / QQ / 腾讯支付
-  - '*.weixin.qq.com'
-  - '*.wx.qq.com'
-  - '*.tenpay.com'
-  - '*.qq.com'
-  - '*.qpic.cn'
-  - '*.gtimg.cn'
+  # ✅ 关键：fake-ip-filter 必须在 dns: 下
+  fake-ip-filter:
+    # —— 你原来的内容（照搬）——
+    - '*.alipay.com'
+    - '*.alipayobjects.com'
+    - '*.taobao.com'
+    - '*.tmall.com'
+    - '*.jd.com'
+    - '*.bankcomm.com'
+    - '*.cmbchina.com'
+    - '*.cmbc.com.cn'
+    - '*.icbc.com.cn'
+    - '*.ccb.com'
+    - '*.abchina.com'
+    - '*.boc.cn'
+    - '*.pingan.com'
+    - '*.cib.com.cn'
+    - '*.psbc.com'
+    - '*.unionpay.com'
+    - '*.unionpayintl.com'
+    - '*.weixin.qq.com'
+    - '*.wx.qq.com'
+    - '*.tenpay.com'
+    - '*.qq.com'
+    - '*.qpic.cn'
+    - '*.gtimg.cn'
+    - 'localhost'
+    - '*.lan'
+    - '*.local'
+    - '*.cn'
+    - '*.126.net'
+    - '*.163.com'
+    - '*.sogou.com'
+    - '*.youku.com'
+    - '*.baidu.com'
+    - '*.bilibili.com'
+    - '*.apple.com'
+    - '*.icloud.com'
+    - '*.icloud-content.com'
+    - '*.mzstatic.com'
+    - '*.windowsupdate.com'
+    - '*.microsoft.com'
+    - '*.office.com'
+    - '*.msftconnecttest.com'
+    - '*.msftncsi.com'
+    - '*.gstatic.com'
+    - '*.google.cn'
 
-  # 国内常见域名
-  - 'localhost'
-  - '*.lan'
-  - '*.local'
-  - '*.cn'
-  - '*.126.net'
-  - '*.163.com'
-  - '*.sogou.com'
-  - '*.youku.com'
-  - '*.baidu.com'
-  - '*.bilibili.com'
+    # —— ✅ 新增：Netflix 防掉解锁（强制真实 IP，不给 198.18）——
+    - '*.netflix.com'
+    - '*.netflix.net'
+    - '*.nflxvideo.net'
+    - '*.nflximg.net'
+    - '*.nflximg.com'
+    - '*.nflxext.com'
+    - '*.nflxso.net'
+    - '*.fast.com'
+    - '*.onetrust.com'
+    - '*.cookielaw.org'
+    - '*.akamaiedge.net'
+    - '*apiproxy*'
+    - '*ichnaea*'
 
-  # 系统更新/大厂服务
-  - '*.apple.com'
-  - '*.icloud.com'
-  - '*.icloud-content.com'
-  - '*.mzstatic.com'
-  - '*.windowsupdate.com'
-  - '*.microsoft.com'
-  - '*.office.com'
-  - '*.msftconnecttest.com'
-  - '*.msftncsi.com'
-  - '*.gstatic.com'
-  - '*.google.cn'
+  # ✅ 类 Surge 的 Host：对 Netflix 域名指定 DoH
+  nameserver-policy:
+    "domain-suffix:netflix.com": https://cloudflare-dns.com/dns-query
+    "domain-suffix:netflix.net": https://cloudflare-dns.com/dns-query
+    "domain-suffix:nflxvideo.net": https://cloudflare-dns.com/dns-query
+    "domain-suffix:nflximg.net": https://cloudflare-dns.com/dns-query
+    "domain-suffix:nflximg.com": https://cloudflare-dns.com/dns-query
+    "domain-suffix:nflxext.com": https://cloudflare-dns.com/dns-query
+    "domain-suffix:nflxso.net": https://cloudflare-dns.com/dns-query
+    "domain-suffix:fast.com": https://cloudflare-dns.com/dns-query
+    "domain-suffix:onetrust.com": https://cloudflare-dns.com/dns-query
+    "domain-suffix:cookielaw.org": https://cloudflare-dns.com/dns-query
+    "domain-suffix:akamaiedge.net": https://cloudflare-dns.com/dns-query
+
   
 rule-providers:
   ad_banad:
@@ -466,7 +496,7 @@ proxy-groups:
     tolerance: 50
     filter: "^(?!.*(剩余流量|到期时间|过期时间|官网地址|产品名称|先购买套餐|流量消耗|唯一官网|更新订阅)).*"
 
-  # === 新增：AI 服务分流组 ===
+  # === AI 服务分流组 ===
   - name: AI服务
     type: select
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png
@@ -486,34 +516,460 @@ proxy-groups:
       - 故障转移
       - 负载均衡
 
-  - { name: Adobe,          type: select, icon: https://www.adobe.com/cc-shared/assets/img/product-icons/svg/photoshop-40.svg, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 英国节点, 德国节点, 手动选择1, 手动选择2] }
+  - name: Adobe
+    type: select
+    icon: https://www.adobe.com/cc-shared/assets/img/product-icons/svg/photoshop-40.svg
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 英国节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
 
-  - { name: Telegram,       type: select, icon: https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png, proxies: [国外流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: Bilibili,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png, proxies: [国内流量, 香港节点, 台湾节点] }
-  - { name: YouTube,        type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2, 故障转移, 负载均衡] }
-  - { name: ParamountPlus,  type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Paramount.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: Hulu,           type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hulu_1.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: DAZN, type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DAZN.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 英国节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: PrimeVideo,     type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Prime_Video.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: HBO,            type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/HBO_Max.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: 社交平台IP归属地, type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Instagram.png, proxies: [DIRECT, 国内流量, 国外流量, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: Netflix,        type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: DisneyPlus,     type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Disney+_1.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: EMBY,           type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: TikTok,         type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: Spotify,        type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: 巴哈姆特,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Bahamut.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: 国外媒体,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ForeignMedia.png, proxies: [国外流量, 国内流量, 自动选择, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点, 手动选择1, 手动选择2] }
-  - { name: 国内媒体,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DomesticMedia.png, proxies: [国内流量, 手动选择1, 手动选择2] }
-  - { name: 微软云盘,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/OneDrive.png, proxies: [国内流量, 国外流量, 手动选择1, 手动选择2] }
-  - { name: 微软服务,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Microsoft.png, proxies: [国内流量, 国外流量, 手动选择1, 手动选择2] }
-  - { name: 苹果服务,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Apple.png, proxies: [国内流量, 国外流量, 手动选择1, 手动选择2] }
-  - { name: 游戏平台,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Game.png, proxies: [国内流量, 国外流量, 手动选择1, 手动选择2, 新加坡节点, 香港节点, 台湾节点, 日本节点, 美国节点, 韩国节点, 印度节点, 英国节点, 法国节点, 俄罗斯节点, 德国节点] }
-  - { name: 国内流量,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China.png, proxies: [DIRECT, 免流, 手动选择1, 手动选择2] }
-  - { name: 广告拦截,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png, proxies: [REJECT, 国内流量, 手动选择1, 手动选择2] }
-  - { name: 应用净化,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png, proxies: [REJECT, 国内流量, 手动选择1, 手动选择2] }
-  - { name: AdBlock,        type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Advertising.png, proxies: [REJECT, 国内流量, 手动选择1, 手动选择2] }
-  - { name: 隐私防护,       type: select, icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Blackhole.png, proxies: [REJECT, 国内流量, 手动选择1, 手动选择2] }
+  - name: Telegram
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png
+    proxies:
+      - 国外流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: Bilibili
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/bilibili.png
+    proxies:
+      - 国内流量
+      - 香港节点
+      - 台湾节点
+
+  - name: YouTube
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+      - 故障转移
+      - 负载均衡
+
+  - name: ParamountPlus
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Paramount.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: AppleTV+
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple_TV.png
+    proxies:
+      - 国外流量
+      - 自动选择
+      - 香港节点
+      - 新加坡节点
+      - 日本节点
+      - 美国节点
+      - 手动选择1
+      - 手动选择2
+      - 故障转移
+      - 负载均衡
+
+  - name: Hulu
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hulu_1.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: DAZN
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DAZN.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 英国节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: PrimeVideo
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Prime_Video.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: HBO
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/HBO_Max.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: 社交平台IP归属地
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Instagram.png
+    proxies:
+      - DIRECT
+      - 国内流量
+      - 国外流量
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: Netflix
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: DisneyPlus
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Disney+_1.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: EMBY
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: TikTok
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: Spotify
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: 巴哈姆特
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Bahamut.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: 国外媒体
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ForeignMedia.png
+    proxies:
+      - 国外流量
+      - 国内流量
+      - 自动选择
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+      - 手动选择1
+      - 手动选择2
+
+  - name: 国内媒体
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/DomesticMedia.png
+    proxies:
+      - 国内流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 微软云盘
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/OneDrive.png
+    proxies:
+      - 国内流量
+      - 国外流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 微软服务
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Microsoft.png
+    proxies:
+      - 国内流量
+      - 国外流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 苹果服务
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Apple.png
+    proxies:
+      - 国内流量
+      - 国外流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 游戏平台
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Game.png
+    proxies:
+      - 国内流量
+      - 国外流量
+      - 手动选择1
+      - 手动选择2
+      - 新加坡节点
+      - 香港节点
+      - 台湾节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 印度节点
+      - 英国节点
+      - 法国节点
+      - 俄罗斯节点
+      - 德国节点
+
+  - name: 国内流量
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China.png
+    proxies:
+      - DIRECT
+      - 免流
+      - 手动选择1
+      - 手动选择2
+
+  - name: 广告拦截
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/AdBlack.png
+    proxies:
+      - REJECT
+      - 国内流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 应用净化
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png
+    proxies:
+      - REJECT
+      - 国内流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: AdBlock
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Advertising.png
+    proxies:
+      - REJECT
+      - 国内流量
+      - 手动选择1
+      - 手动选择2
+
+  - name: 隐私防护
+    type: select
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Blackhole.png
+    proxies:
+      - REJECT
+      - 国内流量
+      - 手动选择1
+      - 手动选择2
+
 
   # —— 地区分组（用正则圈定候选节点） —— 
   - name: 香港节点
