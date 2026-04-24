@@ -8,27 +8,37 @@ external-controller: :9090
 
 dns:
   enable: true
-  listen: 0.0.0.0:53
-  ipv6: false
+  listen: 0.0.0.0:1053
+  ipv6: false       # 🚫 禁止解析 IPv6
   enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.1/16
 
-  # 不建议只写 system（会被污染/劫持）
+  # 解析 DNS 服务器域名用，必须写 IP
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
   nameserver:
-    - system
-  #  - https://1.1.1.1/dns-query
-  #  - https://dns.google/dns-query
-
+    - 223.5.5.5
+    - 119.29.29.29
+  # 国外 DNS（防污染，用加密 DNS）
   fallback:
     - https://1.1.1.1/dns-query
-    - https://1.0.0.1/dns-query
     - https://dns.google/dns-query
-    - tls://1.1.1.1:853
-    - tls://dns.google:853
 
-  # ✅ 关键：fake-ip-filter 必须在 dns: 下
+
+  # 代理节点域名解析专用，避免节点域名解析绕来绕去
+  proxy-server-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+      
+  # 防止国内域名跑去国外 DNS 解析
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
+  # —— fake-ip 过滤，避免国内银行/支付/系统更新误走代理 ——
   fake-ip-filter:
-    # —— 你原来的内容（照搬）——
+    # 常见支付/银行
     - '*.alipay.com'
     - '*.alipayobjects.com'
     - '*.taobao.com'
@@ -46,63 +56,25 @@ dns:
     - '*.psbc.com'
     - '*.unionpay.com'
     - '*.unionpayintl.com'
+
+    # 微信 / QQ / 腾讯支付
     - '*.weixin.qq.com'
     - '*.wx.qq.com'
     - '*.tenpay.com'
     - '*.qq.com'
     - '*.qpic.cn'
     - '*.gtimg.cn'
+
+    # 国内常见域名
     - 'localhost'
     - '*.lan'
     - '*.local'
-    - '*.cn'
     - '*.126.net'
     - '*.163.com'
     - '*.sogou.com'
     - '*.youku.com'
     - '*.baidu.com'
     - '*.bilibili.com'
-    - '*.apple.com'
-    - '*.icloud.com'
-    - '*.icloud-content.com'
-    - '*.mzstatic.com'
-    - '*.windowsupdate.com'
-    - '*.microsoft.com'
-    - '*.office.com'
-    - '*.msftconnecttest.com'
-    - '*.msftncsi.com'
-    - '*.gstatic.com'
-    - '*.google.cn'
-
-    # —— ✅ 新增：Netflix 防掉解锁（强制真实 IP，不给 198.18）——
-    - '*.netflix.com'
-    - '*.netflix.net'
-    - '*.nflxvideo.net'
-    - '*.nflximg.net'
-    - '*.nflximg.com'
-    - '*.nflxext.com'
-    - '*.nflxso.net'
-    - '*.fast.com'
-    - '*.onetrust.com'
-    - '*.cookielaw.org'
-    - '*.akamaiedge.net'
-    - '*apiproxy*'
-    - '*ichnaea*'
-
-  # ✅ 类 Surge 的 Host：对 Netflix 域名指定 DoH
-  nameserver-policy:
-    "domain-suffix:netflix.com": https://cloudflare-dns.com/dns-query
-    "domain-suffix:netflix.net": https://cloudflare-dns.com/dns-query
-    "domain-suffix:nflxvideo.net": https://cloudflare-dns.com/dns-query
-    "domain-suffix:nflximg.net": https://cloudflare-dns.com/dns-query
-    "domain-suffix:nflximg.com": https://cloudflare-dns.com/dns-query
-    "domain-suffix:nflxext.com": https://cloudflare-dns.com/dns-query
-    "domain-suffix:nflxso.net": https://cloudflare-dns.com/dns-query
-    "domain-suffix:fast.com": https://cloudflare-dns.com/dns-query
-    "domain-suffix:onetrust.com": https://cloudflare-dns.com/dns-query
-    "domain-suffix:cookielaw.org": https://cloudflare-dns.com/dns-query
-    "domain-suffix:akamaiedge.net": https://cloudflare-dns.com/dns-query
-
   
 rule-providers:
   ad_banad:
@@ -154,6 +126,12 @@ rule-providers:
     behavior: classical
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ParamountPlus/ParamountPlus.yaml
     path: ./ruleset/paramountplus.yaml
+    interval: 86400
+  appletv:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleTV/AppleTV.yaml
+    path: ./ruleset/appletv.yaml
     interval: 86400
   hulu:
     type: http
@@ -298,37 +276,28 @@ rule-providers:
     path: ./ruleset/adobe_activation.yaml
     interval: 86400
 
+
   openai:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/OpenAI/OpenAI.yaml
     path: ./ruleset/openai.yaml
     interval: 86400
-  anthropic:
+
+  claude:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Anthropic/Anthropic.yaml
-    path: ./ruleset/anthropic.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Claude/Claude.yaml
+    path: ./ruleset/claude.yaml
     interval: 86400
+
   gemini:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Gemini/Gemini.yaml
     path: ./ruleset/gemini.yaml
     interval: 86400
-  copilot:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
-    path: ./ruleset/copilot.yaml
-    interval: 86400
 
-  outside_cutethotw:
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/cutethotw/ClashRule/main/Outside.list
-    path: ./ruleset/outside1.list
-    interval: 86400
   outside_gfw_acl4ssr:
     type: http
     behavior: classical
@@ -472,7 +441,7 @@ proxy-groups:
     type: url-test
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png
     include-all: true
-    url: https://i.ytimg.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 180
     tolerance: 50
     filter: "^(?!.*(剩余流量|到期时间|过期时间|官网地址|产品名称|先购买套餐|流量消耗|唯一官网|更新订阅)).*"
@@ -481,7 +450,7 @@ proxy-groups:
     type: fallback
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png
     include-all: true
-    url: https://i.ytimg.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
     filter: "^(?!.*(剩余流量|到期时间|过期时间|官网地址|产品名称|先购买套餐|流量消耗|唯一官网|更新订阅)).*"
@@ -491,7 +460,7 @@ proxy-groups:
     strategy: consistent-hashing
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final_1.png
     include-all: true
-    url: https://i.ytimg.com/generate_204
+    url: https://www.gstatic.com/generate_204
     interval: 300
     tolerance: 50
     filter: "^(?!.*(剩余流量|到期时间|过期时间|官网地址|产品名称|先购买套餐|流量消耗|唯一官网|更新订阅)).*"
@@ -880,7 +849,7 @@ proxy-groups:
 
   - name: 微软云盘
     type: select
-    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/OneDrive.png
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/OneDrive.png
     proxies:
       - 国内流量
       - 国外流量
@@ -889,7 +858,7 @@ proxy-groups:
 
   - name: 微软服务
     type: select
-    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Microsoft.png
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png
     proxies:
       - 国内流量
       - 国外流量
@@ -898,7 +867,7 @@ proxy-groups:
 
   - name: 苹果服务
     type: select
-    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Apple.png
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple_1.png
     proxies:
       - 国内流量
       - 国外流量
@@ -907,7 +876,7 @@ proxy-groups:
 
   - name: 游戏平台
     type: select
-    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Game.png
+    icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Game.png
     proxies:
       - 国内流量
       - 国外流量
@@ -930,9 +899,6 @@ proxy-groups:
     icon: https://testingcf.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China.png
     proxies:
       - DIRECT
-      - 免流
-      - 手动选择1
-      - 手动选择2
 
   - name: 广告拦截
     type: select
@@ -1029,6 +995,7 @@ proxy-groups:
     filter: "(🇮🇳|印|印度|IN|India)"
 
 rules:
+  - DOMAIN-SUFFIX,groq.com,AI服务
   # —— 先把 ofiii.com 强制走巴哈姆特 —— 
   - DOMAIN-SUFFIX,ofiii.com,巴哈姆特
   - DOMAIN-SUFFIX,ntd-tgc.cdn.hinet.net,巴哈姆特
@@ -1040,6 +1007,11 @@ rules:
   - RULE-SET,ad_easylist_cn,AdBlock
   - RULE-SET,privacy,隐私防护
 
+  # === AI 服务分流（增强版） ===
+  - RULE-SET,openai,AI服务
+  - RULE-SET,claude,AI服务
+  - RULE-SET,gemini,AI服务
+
   # 流媒体 / 平台
   - RULE-SET,dazn,DAZN
   - RULE-SET,primevideo,PrimeVideo
@@ -1047,6 +1019,7 @@ rules:
   - RULE-SET,hulu,Hulu
   - RULE-SET,hulu_jp,Hulu
   - RULE-SET,hulu_usa,Hulu
+  - RULE-SET,appletv,AppleTV+
   - RULE-SET,hbo_hk,HBO
   - RULE-SET,hbo_asia,HBO
   - RULE-SET,hbo_usa,HBO
@@ -1066,12 +1039,6 @@ rules:
   - RULE-SET,spotify,Spotify
   - RULE-SET,tiktok,TikTok
 
-  # === 新增：AI 服务分流（放在国外/国内媒体之前，确保优先级） ===
-  - RULE-SET,openai,AI服务
-  - RULE-SET,anthropic,AI服务
-  - RULE-SET,gemini,AI服务
-  - RULE-SET,copilot,AI服务
-
   # === 新增：adobe ===
   - RULE-SET,adobe,Adobe
   - RULE-SET,adobe_activation,Adobe
@@ -1081,7 +1048,6 @@ rules:
   - RULE-SET,cn_media,国内媒体
 
   # 国外流量（多源合并）
-  - RULE-SET,outside_cutethotw,国外流量
   - RULE-SET,outside_gfw_acl4ssr,国外流量
   - RULE-SET,outside_bm7_proxy,国外流量
 
@@ -1102,6 +1068,7 @@ rules:
   - RULE-SET,geoip2_cn_ipcidr,国内流量
 
   # 兜底
+  - GEOIP,CN,国内流量
   - MATCH,漏网之鱼
 
  
